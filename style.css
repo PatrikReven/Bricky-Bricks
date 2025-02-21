@@ -1,0 +1,156 @@
+/* POGOSTE NASTAVITVE */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background-color: #191414; /* Spotify-temno ozadje */
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+}
+
+/* SKRIVANJE & PRIKAZOVANJE EKRANOV */
+.screen {
+  display: none;
+}
+.screen.active {
+  display: block;
+}
+
+/* ZAČETNI ZASLON */
+#welcomeScreen {
+  max-width: 400px;
+  margin: 0 auto;
+  border: 2px solid #1DB954;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #000;
+}
+.welcome-container {
+  margin-top: 20px;
+}
+.login-box, .difficulty-box {
+  margin-bottom: 15px;
+}
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+input[type="text"], select {
+  width: 80%;
+  padding: 8px;
+  border: 1px solid #999;
+  border-radius: 4px;
+  outline: none;
+}
+input[type="text"]:focus, select:focus {
+  border-color: #1DB954;
+}
+.buttons-box button {
+  margin: 5px;
+}
+
+/* GUMBI */
+button {
+  background: #1DB954;
+  color: #000;
+  font-size: 14px;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+button:hover {
+  opacity: 0.8;
+}
+
+/* IGRA - GAME SCREEN */
+#gameScreen {
+  max-width: 600px;
+  margin: 0 auto;
+}
+#userInfo {
+  margin-bottom: 10px;
+  font-style: italic;
+  color: #ccc;
+}
+#gameContainer {
+  margin: 0 auto;
+  position: relative;
+}
+
+/* CANVAS */
+canvas {
+  background: #000; 
+  display: block;
+  border: 2px solid #1DB954;
+  margin: 0 auto;
+}
+
+/* INFO PANEL (TOČKE, ČAS, NIVO) */
+#infoPanel {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.infoBox {
+  padding: 5px 10px;
+  background-color: #1DB954;
+  color: #000;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+/* GUMBI POD PLATNOM */
+#buttonsPanel {
+  margin-top: 15px;
+}
+
+/* BEST RESULTS */
+#bestResults {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #ccc;
+}
+
+/* MODAL - NAVODILA */
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 999; 
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: auto; 
+  background-color: rgba(0,0,0,0.5); /* prosojno ozadje */
+}
+
+.modal-content {
+  background-color: #2b2b2b;
+  margin: 10% auto; 
+  padding: 20px;
+  border: 2px solid #1DB954;
+  width: 80%;
+  max-width: 600px;
+  color: #fff;
+  position: relative;
+  border-radius: 8px;
+}
+
+.close {
+  color: #fff;
+  font-weight: bold;
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 24px;
+  cursor: pointer;
+}
+.close:hover {
+  color: #1DB954;
+}
