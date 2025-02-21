@@ -14,20 +14,27 @@ const ctx = canvas.getContext("2d");
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 
-// ŽOGICA
+// ŽOGICA (z opcijsko sliko)
 let x = WIDTH / 2;
 let y = HEIGHT - 30;
 let dx = 3;  
 let dy = -3;
 let ballRadius = 10;
-let ballColor = "#1DB954";
 
-// PLOŠČICA
-const paddleHeight = 10;
-const paddleWidth = 75;
+// Če želiš sliko za žogico
+const ballImg = new Image();
+ballImg.src = "slike/ball.png";
+let useBallImage = true; // True, če želiš risati sliko
+
+// PLOŠČICA (z opcijsko sliko)
+const paddleHeight = 20;     // Lahko malo več
+const paddleWidth = 80;
 let paddleX = (WIDTH - paddleWidth) / 2;
 let rightPressed = false;
 let leftPressed = false;
+const paddleImg = new Image();
+paddleImg.src = "slike/paddle.png";
+let usePaddleImage = true;
 
 // OPEKE
 let brickRowCount = 3;
@@ -38,6 +45,12 @@ const brickPadding = 10;
 const brickOffsetTop = 30;
 const brickOffsetLeft = 30;
 let bricks = [];
+
+// Uporabimo 2 sliki za opeke (navadno, bonus)
+const brickImgGreen = new Image();
+brickImgGreen.src = "slike/brickGreen.png";
+const brickImgGold = new Image();
+brickImgGold.src = "slike/brickGold.png";
 
 // TOČKE in ČAS
 let score = 0;
@@ -58,7 +71,7 @@ let isPaused = false;
  *  INIT
  *******************************************************/
 window.onload = () => {
-  // Dogodki na začetnem zaslonu
+  // Gumbi na začetnem zaslonu
   document.getElementById("startGameBtn").addEventListener("click", handleStartGame);
   document.getElementById("showInstructionsBtn").addEventListener("click", showInstructions);
 
@@ -77,6 +90,7 @@ window.onload = () => {
   // Gumbi v igri
   document.getElementById("pauseBtn").addEventListener("click", pauseGame);
   document.getElementById("resetBtn").addEventListener("click", resetGame);
+  document.getElementById("leaderboardBtn").addEventListener("click", showLeaderboard);
 
   // Tipke
   document.addEventListener("keydown", keyDownHandler, false);
@@ -85,7 +99,7 @@ window.onload = () => {
   // Miška
   document.addEventListener("mousemove", mouseMoveHandler, false);
 
-  // Začetna nastavitev
+  // Začetni zaslon
   switchScreen("welcome");
 };
 
@@ -115,7 +129,6 @@ function handleStartGame() {
   const difficultyField = document.getElementById("difficulty");
 
   if (!userField.value.trim()) {
-    // SweetAlert2 namesto alert:
     Swal.fire({
       title: "Napaka",
       text: "Prosim, vnesi svoje uporabniško ime!",
@@ -128,21 +141,16 @@ function handleStartGame() {
   currentUser = userField.value.trim();
   currentDifficulty = difficultyField.value;
 
-  // Nastavi parametre glede na težavnost
   setDifficulty(currentDifficulty);
 
-  // Preklop v Game Screen
   switchScreen("game");
 
-  // Izpiši ime in težavnost
   document.getElementById("displayUser").textContent = currentUser;
   document.getElementById("displayDifficulty").textContent = mapDifficultyLabel(currentDifficulty);
 
-  // Naloži osebni rekord
   loadBestResultsForUser(currentUser);
 
-  // Pripravi igro
-  resetGame(true);  // justPrepare = true
+  resetGame(true);
   startGame();
 }
 
@@ -186,29 +194,27 @@ function createBricks() {
 }
 
 /*******************************************************
- *  RISANJE OPEK
+ *  RISANJE OPEK - SLIKE
  *******************************************************/
-/*
-  TU LAHKO DODAŠ SLIKE ZA OPEKE:
-  - Kreiraj npr. let img = new Image(); img.src = "slike/brick.png";
-  - Namesto ctx.rect() in ctx.fill() uporabi: ctx.drawImage(img, brickX, brickY, brickWidth, brickHeight);
-  - Ali pa pogoju, če je status 2 (bonus), kakšna druga slika...
-*/
 function drawBricks() {
   for (let c = 0; c < brickColumnCount; c++) {
     for (let r = 0; r < brickRowCount; r++) {
-      const b = bricks[c][r];
+      let b = bricks[c][r];
       if (b.status > 0) {
         let brickX = (c * (brickWidth + brickPadding)) + brickOffsetLeft;
         let brickY = (r * (brickHeight + brickPadding)) + brickOffsetTop;
         b.x = brickX;
         b.y = brickY;
 
-        // Bonus (status=2) zlata, sicer zelena
-        ctx.fillStyle = (b.status === 2) ? "#FFD700" : "#1DB954";
         ctx.beginPath();
-        ctx.rect(brickX, brickY, brickWidth, brickHeight);
-        ctx.fill();
+        // Bonus = 2 => zlata opeka, sicer zelena
+        if (b.status === 2) {
+          // slika zlate opeke
+          ctx.drawImage(brickImgGold, brickX, brickY, brickWidth, brickHeight);
+        } else {
+          // slika zelene opeke
+          ctx.drawImage(brickImgGreen, brickX, brickY, brickWidth, brickHeight);
+        }
         ctx.closePath();
       }
     }
@@ -216,32 +222,34 @@ function drawBricks() {
 }
 
 /*******************************************************
- *  RISANJE ŽOGICE (lahko dodaš animacije)
+ *  RISANJE ŽOGICE
  *******************************************************/
-/*
-  Če želiš animirano spreminjanje barve žogice, 
-  lahko v draw() preverjaš kakšne parametre časa ali 
-  sinusno spreminjaš barvo. 
-*/
 function drawBall() {
   ctx.beginPath();
-  ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-  ctx.fillStyle = ballColor;
-  ctx.fill();
+  if (useBallImage) {
+    // Risanje slike žogice
+    ctx.drawImage(ballImg, x - ballRadius, y - ballRadius, ballRadius * 2, ballRadius * 2);
+  } else {
+    // Navadna risba kroga
+    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "#1DB954";
+    ctx.fill();
+  }
   ctx.closePath();
 }
 
 /*******************************************************
  *  RISANJE PLOŠČICE
  *******************************************************/
-/*
-  Tudi tu lahko uporabiš sliko ploščice (drawImage).
-*/
 function drawPaddle() {
   ctx.beginPath();
-  ctx.rect(paddleX, HEIGHT - paddleHeight, paddleWidth, paddleHeight);
-  ctx.fillStyle = "#1DB954";
-  ctx.fill();
+  if (usePaddleImage) {
+    ctx.drawImage(paddleImg, paddleX, HEIGHT - paddleHeight, paddleWidth, paddleHeight);
+  } else {
+    ctx.rect(paddleX, HEIGHT - paddleHeight, paddleWidth, paddleHeight);
+    ctx.fillStyle = "#1DB954";
+    ctx.fill();
+  }
   ctx.closePath();
 }
 
@@ -270,6 +278,9 @@ function collisionDetection() {
   }
 }
 
+/*******************************************************
+ *  PREHOD NA NASLEDNJI NIVO
+ *******************************************************/
 function checkLevelComplete() {
   let allBroken = true;
   for (let c = 0; c < bricks.length; c++) {
@@ -284,15 +295,16 @@ function checkLevelComplete() {
 
   if (allBroken) {
     if (level >= maxLevel) {
-      stopGame(true);
+      stopGame(true); // zmaga
     } else {
       level++;
       document.getElementById("level").textContent = level;
 
+      // Povečaj hitrost 
       if (dx > 0) dx++; else dx--;
       if (dy > 0) dy++; else dy--;
-      brickRowCount++;
 
+      brickRowCount++;
       createBricks();
       x = WIDTH / 2;
       y = HEIGHT - 30;
@@ -322,8 +334,8 @@ function draw() {
     dy = -dy;
   } 
   else if (y + dy > HEIGHT - ballRadius) {
-    // ploščica?
     if (x > paddleX && x < paddleX + paddleWidth) {
+      // dinamičen odboj
       let deltaX = x - (paddleX + paddleWidth / 2);
       dx = deltaX * 0.35;
       dy = -dy;
@@ -338,8 +350,7 @@ function draw() {
   // Premik ploščice
   if (rightPressed && paddleX < WIDTH - paddleWidth) {
     paddleX += 7;
-  }
-  else if (leftPressed && paddleX > 0) {
+  } else if (leftPressed && paddleX > 0) {
     paddleX -= 7;
   }
 
@@ -390,7 +401,7 @@ function pauseGame() {
   if (isGameRunning && !isPaused) {
     isPaused = true;
     stopTimer();
-    // SweetAlert obvestilo (opcijsko)
+    // Obvestilo
     Swal.fire({
       title: "Pavza",
       text: "Igra je ustavljena. Klikni 'V redu' za nadaljevanje.",
@@ -408,23 +419,25 @@ function pauseGame() {
 function stopGame(winner) {
   isGameRunning = false;
   stopTimer();
-  // Shranimo rezultat (osebno in v leaderboard)
-  saveResultForUser(currentUser);
+
+  saveResultForUser(currentUser);  
   saveToLeaderboard(currentUser, score, sekunde);
 
   if (winner) {
+    // Zmaga
     Swal.fire({
-      title: "Zmagal si!",
-      text: "Čestitke, končal si vse nivoje!",
+      title: "Čestitke, zmagal si!",
+      html: `<img src="slike/trophy.png" alt="Trophy" style="width:100px;"><p>Končal si vse nivoje!</p>`,
       icon: "success",
       confirmButtonText: "Pokaži leaderboard"
     }).then(() => {
       showLeaderboard();
     });
   } else {
+    // Poraz
     Swal.fire({
       title: "Konec igre!",
-      text: "Kroglica je ušla mimo ploščice.",
+      html: `<img src="slike/gameover.png" alt="Game Over" style="width:120px;"><p>Kroglica je ušla mimo ploščice.</p>`,
       icon: "error",
       confirmButtonText: "Pokaži leaderboard"
     }).then(() => {
@@ -445,10 +458,8 @@ function resetGame(justPrepare = false) {
   level = 1;
   document.getElementById("level").textContent = level;
 
-  // Spet nastavimo parametre glede na difficulty
   setDifficulty(currentDifficulty);
 
-  // Začetna pozicija
   x = WIDTH / 2;
   y = HEIGHT - 30;
   paddleX = (WIDTH - paddleWidth) / 2;
@@ -525,68 +536,76 @@ function drawBestResults() {
 }
 
 /*******************************************************
- *  LEADERBOARD (GLOBALNO)
+ *  LEADERBOARD (GLOBALNO) - SweetAlert
  *******************************************************/
-/*
-  Shranjujemo array objektov: { username, score, time } v localStorage.
-  Ključ: "theBricks_leaderboard".
-  Ko se konča igra, dodamo nov zapis in prikažemo top 5.
-*/
-
 function saveToLeaderboard(username, score, time) {
   let leaderboard = loadLeaderboard();
-  
-  // Dodaj nov rezultat
   leaderboard.push({ user: username, score: score, time: time });
-  
-  // Shrani nazaj
   localStorage.setItem("theBricks_leaderboard", JSON.stringify(leaderboard));
 }
 
-// Prebere leaderboard iz localStorage
 function loadLeaderboard() {
   let data = localStorage.getItem("theBricks_leaderboard");
   if (!data) {
-    return []; // Ni še nič
+    return [];
   }
   return JSON.parse(data);
 }
 
-// Prikaže leaderboard (top 5) s SweetAlert2
+/* 
+  Prikažemo SweetAlert z HTML tabelo.
+*/
 function showLeaderboard() {
   let leaderboard = loadLeaderboard();
-  
-  // Sortiramo: najprej po score desc, nato po time asc
+  // Sortiraj: score desc, time asc
   leaderboard.sort((a, b) => {
     if (b.score !== a.score) {
-      return b.score - a.score; // večji score -> višje
+      return b.score - a.score;
     } else {
-      return a.time - b.time; // manjši čas -> višje
+      return a.time - b.time;
     }
   });
+  // Prikaz top 10
+  let top10 = leaderboard.slice(0, 10);
 
-  // Odrežemo na top 5
-  let top5 = leaderboard.slice(0, 5);
-
-  // Pripravimo HTML za prikaz
-  let html = "<table style='width:100%; text-align:left; color:#fff;'>"
-           + "<thead><tr><th>Mesto</th><th>Igralec</th><th>Točke</th><th>Čas (s)</th></tr></thead>"
-           + "<tbody>";
-  top5.forEach((item, index) => {
-    html += `<tr>
-      <td>${index + 1}.</td>
-      <td>${item.user}</td>
-      <td>${item.score}</td>
-      <td>${item.time}</td>
-    </tr>`;
+  // Sestavi HTML
+  let html = `
+    <div style="text-align:center;">
+      <img src="slike/leaderboard.png" alt="Leaderboard" style="width:100px;">
+      <h2 style="color:#fff;">Najboljši Rezultati</h2>
+    </div>
+    <table style="margin:0 auto; color:#fff; border-collapse: collapse; min-width:300px;">
+      <thead>
+        <tr style="background:#333;">
+          <th style="padding:8px; border:1px solid #666;">#</th>
+          <th style="padding:8px; border:1px solid #666;">Igralec</th>
+          <th style="padding:8px; border:1px solid #666;">Točke</th>
+          <th style="padding:8px; border:1px solid #666;">Čas (s)</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  top10.forEach((item, idx) => {
+    html += `
+      <tr style="background:${idx % 2 === 0 ? '#2b2b2b' : '#1e1e1e'};">
+        <td style="padding:8px; border:1px solid #666;">${idx + 1}</td>
+        <td style="padding:8px; border:1px solid #666;">${item.user}</td>
+        <td style="padding:8px; border:1px solid #666;">${item.score}</td>
+        <td style="padding:8px; border:1px solid #666;">${item.time}</td>
+      </tr>
+    `;
   });
-  html += "</tbody></table>";
+  html += `
+      </tbody>
+    </table>
+  `;
 
-  // SweetAlert s HTML-jem
   Swal.fire({
-    title: "Leaderboard",
+    title: "LEADERBOARD",
     html: html,
-    icon: "info",
-    confirmButtonText: "Zapri"
+    background: "rgba(0,0,0,0.9)",  /* polprosojno črno ozadje v sweetalert */
+    confirmButtonText: "Zapri",
+    // Ikono lahko izpustiš ali nastaviš na 'info', ker nam bo slika prikazana ročno.
+    icon: "info"
   });
 }

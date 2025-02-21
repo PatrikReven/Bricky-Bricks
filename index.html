@@ -2,18 +2,16 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <title>The Bricks - Spotify Edition (Extended + SweetAlert & Leaderboard)</title>
-  <!-- Povezava na CSS -->
+  <title>The Bricks - Spotify Edition (SweetAlert + Leaderboard)</title>
+  
+  <!-- Naša CSS datoteka -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- SweetAlert2 (zadnja različica) -->
+  <!-- SweetAlert2 (zadnja verzija) -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-
-  <!-- ============================
-       ZAČETNI (WELCOME) ZASLON
-  =============================-->
+  <!-- ZAČETNI ZASLON -->
   <div id="welcomeScreen" class="screen active fade-in">
     <h1>The Bricks - Spotify Edition</h1>
     <div class="welcome-container">
@@ -38,9 +36,7 @@
     </div>
   </div>
 
-  <!-- ============================
-       BLOK Z NAVODILI (MODAL)
-  =============================-->
+  <!-- NAVODILA - MODAL -->
   <div id="instructionsModal" class="modal">
     <div class="modal-content">
       <span id="closeInstructions" class="close">&times;</span>
@@ -51,14 +47,12 @@
         - Bonus opeke prinašajo več točk.<br>
         - Vsak uničen nabor opek te pripelje na višji nivo, kjer se težavnost poveča.<br>
         - Če kroglica pade mimo ploščice, je igre konec.<br>
-        - Težavnost določa začetno hitrost žogice in število vrstic opek.<br>
+        - Težavnost določa začetno hitrost žogice in število opek.<br>
       </p>
     </div>
   </div>
 
-  <!-- ============================
-       IGRALNI ZASLON
-  =============================-->
+  <!-- IGRALNI ZASLON -->
   <div id="gameScreen" class="screen fade-in">
     <h1 id="gameTitle">The Bricks - Spotify Edition</h1>
 
@@ -79,6 +73,8 @@
       <div id="buttonsPanel">
         <button id="pauseBtn">PAVZA</button>
         <button id="resetBtn">KONEC/RESET</button>
+        <!-- Gumb za ročni prikaz Leaderboard-a -->
+        <button id="leaderboardBtn">LEADERBOARD</button>
       </div>
 
       <div id="bestResults">
@@ -91,7 +87,7 @@
     </div>
   </div>
 
-  <!-- Naš glavni skript -->
+  <!-- Glavni JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>

@@ -7,13 +7,17 @@
 }
 
 body {
-  background-color: #191414; /* Spotify-temno ozadje */
+  /* Dodaj lahko ozadje Spotify:
+     background: url("slike/spotify_bg.jpg") no-repeat center center; 
+     background-size: cover; 
+  */
+  background-color: #191414;
   color: #fff;
   text-align: center;
   padding: 20px;
 }
 
-/* SCREENI: welcome / game */
+/* Zasloni */
 .screen {
   display: none;
 }
@@ -28,6 +32,13 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* Dodatna animacija (če bi želeli animirati žogico) */
+@keyframes pulseBall {
+  0% { fill: #1DB954; }
+  50% { fill: #09a14a; }
+  100% { fill: #1DB954; }
 }
 
 /* Začetni zaslon */
@@ -73,6 +84,7 @@ button {
   border: none;
   cursor: pointer;
   border-radius: 4px;
+  transition: background-color 0.3s, opacity 0.3s;
 }
 button:hover {
   opacity: 0.8;
@@ -95,6 +107,9 @@ button:hover {
 
 /* CANVAS */
 canvas {
+  /* Lahko dodaš sliko ozadja v canvas (npr. z drawImage) ali z CSS trickom, 
+     a ponavadi se to reši v samem JavaScriptu. 
+  */
   background: #000; 
   display: block;
   border: 2px solid #1DB954;
@@ -160,12 +175,4 @@ canvas {
 }
 .close:hover {
   color: #1DB954;
-}
-
-/* DODATNA ANIMACIJA (npr. pulziranje barve žogice)
-   -> Lahko se uporabi z .ballPulse class (če želiš) */
-@keyframes pulseColor {
-  0%   { fill: #1DB954; }
-  50%  { fill: #09a14a; }
-  100% { fill: #1DB954; }
 }
