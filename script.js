@@ -44,7 +44,7 @@ let score = 0;
 let sekunde = 0;
 let timerInterval = null;
 
-// LOKALNI REZULTATI
+// LOKALNI REZULTATI (osebni)
 let bestScore = 0;
 let bestTime = 999999; // v sekundah
 
@@ -55,7 +55,7 @@ let isGameRunning = false;
 let isPaused = false;
 
 /*******************************************************
- *  KO SE STRAN NALOŽI
+ *  INIT
  *******************************************************/
 window.onload = () => {
   // Dogodki na začetnem zaslonu
@@ -92,7 +92,6 @@ window.onload = () => {
 /*******************************************************
  *  FUNKCIJE ZA ZASLONE
  *******************************************************/
-// Preklapljanje zaslonov
 function switchScreen(screenName) {
   if (screenName === "welcome") {
     welcomeScreen.classList.add("active");
@@ -103,7 +102,6 @@ function switchScreen(screenName) {
   }
 }
 
-// Pokaži modal navodil
 function showInstructions() {
   const modal = document.getElementById("instructionsModal");
   modal.style.display = "block";
@@ -117,32 +115,37 @@ function handleStartGame() {
   const difficultyField = document.getElementById("difficulty");
 
   if (!userField.value.trim()) {
-    alert("Prosim, vnesi svoje uporabniško ime!");
+    // SweetAlert2 namesto alert:
+    Swal.fire({
+      title: "Napaka",
+      text: "Prosim, vnesi svoje uporabniško ime!",
+      icon: "warning",
+      confirmButtonText: "V redu"
+    });
     return;
   }
   
   currentUser = userField.value.trim();
   currentDifficulty = difficultyField.value;
 
-  // Glede na težavnost nastavimo parametre (hitrost žoge, št. vrstic/stolpcev, ipd.)
+  // Nastavi parametre glede na težavnost
   setDifficulty(currentDifficulty);
 
-  // Preklopimo na game screen
+  // Preklop v Game Screen
   switchScreen("game");
 
-  // Izpišemo ime in težavnost
+  // Izpiši ime in težavnost
   document.getElementById("displayUser").textContent = currentUser;
   document.getElementById("displayDifficulty").textContent = mapDifficultyLabel(currentDifficulty);
 
-  // Naloži najboljše rezultate, če obstajajo
+  // Naloži osebni rekord
   loadBestResultsForUser(currentUser);
 
-  // Pripravimo igro (reset, nato start)
-  resetGame(true);
+  // Pripravi igro
+  resetGame(true);  // justPrepare = true
   startGame();
 }
 
-// Nastavitve za različno težavnost
 function setDifficulty(diff) {
   if (diff === "easy") {
     dx = 2; dy = -2;
@@ -158,8 +161,6 @@ function setDifficulty(diff) {
     brickColumnCount = 7;
   }
 }
-
-// Pretvori difficulty v slovenski zapis
 function mapDifficultyLabel(diff) {
   switch (diff) {
     case "easy": return "Lahko";
@@ -187,6 +188,12 @@ function createBricks() {
 /*******************************************************
  *  RISANJE OPEK
  *******************************************************/
+/*
+  TU LAHKO DODAŠ SLIKE ZA OPEKE:
+  - Kreiraj npr. let img = new Image(); img.src = "slike/brick.png";
+  - Namesto ctx.rect() in ctx.fill() uporabi: ctx.drawImage(img, brickX, brickY, brickWidth, brickHeight);
+  - Ali pa pogoju, če je status 2 (bonus), kakšna druga slika...
+*/
 function drawBricks() {
   for (let c = 0; c < brickColumnCount; c++) {
     for (let r = 0; r < brickRowCount; r++) {
@@ -209,8 +216,13 @@ function drawBricks() {
 }
 
 /*******************************************************
- *  RISANJE ŽOGICE
+ *  RISANJE ŽOGICE (lahko dodaš animacije)
  *******************************************************/
+/*
+  Če želiš animirano spreminjanje barve žogice, 
+  lahko v draw() preverjaš kakšne parametre časa ali 
+  sinusno spreminjaš barvo. 
+*/
 function drawBall() {
   ctx.beginPath();
   ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
@@ -222,6 +234,9 @@ function drawBall() {
 /*******************************************************
  *  RISANJE PLOŠČICE
  *******************************************************/
+/*
+  Tudi tu lahko uporabiš sliko ploščice (drawImage).
+*/
 function drawPaddle() {
   ctx.beginPath();
   ctx.rect(paddleX, HEIGHT - paddleHeight, paddleWidth, paddleHeight);
@@ -255,7 +270,6 @@ function collisionDetection() {
   }
 }
 
-// Preveri, ali so vse opeke uničene -> naprej na naslednji nivo ali zmaga
 function checkLevelComplete() {
   let allBroken = true;
   for (let c = 0; c < bricks.length; c++) {
@@ -270,18 +284,16 @@ function checkLevelComplete() {
 
   if (allBroken) {
     if (level >= maxLevel) {
-      stopGame(true); // končna zmaga
+      stopGame(true);
     } else {
       level++;
       document.getElementById("level").textContent = level;
 
-      // Povečamo hitrost, več vrstic / stolpcev
       if (dx > 0) dx++; else dx--;
       if (dy > 0) dy++; else dy--;
-
       brickRowCount++;
-      createBricks();
 
+      createBricks();
       x = WIDTH / 2;
       y = HEIGHT - 30;
       paddleX = (WIDTH - paddleWidth) / 2;
@@ -302,7 +314,7 @@ function draw() {
   drawPaddle();
   collisionDetection();
 
-  // Odboji od robov
+  // Odboji robov
   if (x + dx > WIDTH - ballRadius || x + dx < ballRadius) {
     dx = -dx;
   }
@@ -316,7 +328,6 @@ function draw() {
       dx = deltaX * 0.35;
       dy = -dy;
     } else {
-      // Konec igre
       stopGame(false);
     }
   }
@@ -379,17 +390,46 @@ function pauseGame() {
   if (isGameRunning && !isPaused) {
     isPaused = true;
     stopTimer();
+    // SweetAlert obvestilo (opcijsko)
+    Swal.fire({
+      title: "Pavza",
+      text: "Igra je ustavljena. Klikni 'V redu' za nadaljevanje.",
+      icon: "info",
+      confirmButtonText: "V redu"
+    }).then(() => {
+      // Nadaljuj
+      if (isGameRunning && isPaused) {
+        startGame();
+      }
+    });
   }
 }
 
 function stopGame(winner) {
   isGameRunning = false;
   stopTimer();
+  // Shranimo rezultat (osebno in v leaderboard)
   saveResultForUser(currentUser);
+  saveToLeaderboard(currentUser, score, sekunde);
+
   if (winner) {
-    alert("Čestitke, zmagal si (dosegel vse nivoje)!");
+    Swal.fire({
+      title: "Zmagal si!",
+      text: "Čestitke, končal si vse nivoje!",
+      icon: "success",
+      confirmButtonText: "Pokaži leaderboard"
+    }).then(() => {
+      showLeaderboard();
+    });
   } else {
-    alert("Konec igre! Kroglica je ušla mimo ploščice.");
+    Swal.fire({
+      title: "Konec igre!",
+      text: "Kroglica je ušla mimo ploščice.",
+      icon: "error",
+      confirmButtonText: "Pokaži leaderboard"
+    }).then(() => {
+      showLeaderboard();
+    });
   }
 }
 
@@ -405,10 +445,10 @@ function resetGame(justPrepare = false) {
   level = 1;
   document.getElementById("level").textContent = level;
 
-  // Po resetu še enkrat nastavimo parametre iz izbrane težavnosti
+  // Spet nastavimo parametre glede na difficulty
   setDifficulty(currentDifficulty);
 
-  // Začetna pozicija žogice in ploščice
+  // Začetna pozicija
   x = WIDTH / 2;
   y = HEIGHT - 30;
   paddleX = (WIDTH - paddleWidth) / 2;
@@ -421,7 +461,6 @@ function resetGame(justPrepare = false) {
   drawPaddle();
 
   if (!justPrepare) {
-    // Če reset iz gumba, želimo takoj spet zagnati igro
     startGame();
   }
 }
@@ -452,9 +491,7 @@ function updateTime(sec) {
 }
 
 /*******************************************************
- *  LOKALNO SHRANJEVANJE
- *  Shranjujemo rezultate glede na UPORABNIŠKO IME.
- *  Ključ v localStorage: "theBricks_score_{username}"
+ *  OSEBNI REZULTATI (BEST SCORE / TIME)
  *******************************************************/
 function loadBestResultsForUser(username) {
   let storedScore = localStorage.getItem("theBricks_score_" + username);
@@ -466,28 +503,90 @@ function loadBestResultsForUser(username) {
 }
 
 function saveResultForUser(username) {
-  // Če je trenutni score boljši od bestScore, shranimo
   if (score > bestScore) {
     bestScore = score;
     bestTime = sekunde;
     localStorage.setItem("theBricks_score_" + username, bestScore.toString());
     localStorage.setItem("theBricks_time_" + username, bestTime.toString());
-  }
-  // Če je enak, preverimo čas
-  else if (score === bestScore && sekunde < bestTime) {
+  } else if (score === bestScore && sekunde < bestTime) {
     bestTime = sekunde;
     localStorage.setItem("theBricks_time_" + username, bestTime.toString());
   }
   drawBestResults();
 }
 
-// Izpišemo bestScore, bestTime
 function drawBestResults() {
   document.getElementById("bestScore").textContent = bestScore;
-  
   let s = bestTime % 60;
   let m = Math.floor(bestTime / 60);
   let ss = s < 10 ? "0" + s : s;
   let mm = m < 10 ? "0" + m : m;
   document.getElementById("bestTime").textContent = mm + ":" + ss;
+}
+
+/*******************************************************
+ *  LEADERBOARD (GLOBALNO)
+ *******************************************************/
+/*
+  Shranjujemo array objektov: { username, score, time } v localStorage.
+  Ključ: "theBricks_leaderboard".
+  Ko se konča igra, dodamo nov zapis in prikažemo top 5.
+*/
+
+function saveToLeaderboard(username, score, time) {
+  let leaderboard = loadLeaderboard();
+  
+  // Dodaj nov rezultat
+  leaderboard.push({ user: username, score: score, time: time });
+  
+  // Shrani nazaj
+  localStorage.setItem("theBricks_leaderboard", JSON.stringify(leaderboard));
+}
+
+// Prebere leaderboard iz localStorage
+function loadLeaderboard() {
+  let data = localStorage.getItem("theBricks_leaderboard");
+  if (!data) {
+    return []; // Ni še nič
+  }
+  return JSON.parse(data);
+}
+
+// Prikaže leaderboard (top 5) s SweetAlert2
+function showLeaderboard() {
+  let leaderboard = loadLeaderboard();
+  
+  // Sortiramo: najprej po score desc, nato po time asc
+  leaderboard.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score; // večji score -> višje
+    } else {
+      return a.time - b.time; // manjši čas -> višje
+    }
+  });
+
+  // Odrežemo na top 5
+  let top5 = leaderboard.slice(0, 5);
+
+  // Pripravimo HTML za prikaz
+  let html = "<table style='width:100%; text-align:left; color:#fff;'>"
+           + "<thead><tr><th>Mesto</th><th>Igralec</th><th>Točke</th><th>Čas (s)</th></tr></thead>"
+           + "<tbody>";
+  top5.forEach((item, index) => {
+    html += `<tr>
+      <td>${index + 1}.</td>
+      <td>${item.user}</td>
+      <td>${item.score}</td>
+      <td>${item.time}</td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+
+  // SweetAlert s HTML-jem
+  Swal.fire({
+    title: "Leaderboard",
+    html: html,
+    icon: "info",
+    confirmButtonText: "Zapri"
+  });
 }

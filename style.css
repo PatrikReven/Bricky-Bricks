@@ -1,4 +1,4 @@
-/* POGOSTE NASTAVITVE */
+/* Osnove */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -13,7 +13,7 @@ body {
   padding: 20px;
 }
 
-/* SKRIVANJE & PRIKAZOVANJE EKRANOV */
+/* SCREENI: welcome / game */
 .screen {
   display: none;
 }
@@ -21,7 +21,16 @@ body {
   display: block;
 }
 
-/* ZAČETNI ZASLON */
+/* Animacija fade-in */
+.fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Začetni zaslon */
 #welcomeScreen {
   max-width: 400px;
   margin: 0 auto;
@@ -55,7 +64,7 @@ input[type="text"]:focus, select:focus {
   margin: 5px;
 }
 
-/* GUMBI */
+/* Gumbi */
 button {
   background: #1DB954;
   color: #000;
@@ -69,7 +78,7 @@ button:hover {
   opacity: 0.8;
 }
 
-/* IGRA - GAME SCREEN */
+/* Game screen */
 #gameScreen {
   max-width: 600px;
   margin: 0 auto;
@@ -92,7 +101,7 @@ canvas {
   margin: 0 auto;
 }
 
-/* INFO PANEL (TOČKE, ČAS, NIVO) */
+/* Info panel (točke, čas, nivo) */
 #infoPanel {
   margin-top: 10px;
   display: flex;
@@ -107,19 +116,19 @@ canvas {
   border-radius: 5px;
 }
 
-/* GUMBI POD PLATNOM */
+/* Gumbi pod platnom */
 #buttonsPanel {
   margin-top: 15px;
 }
 
-/* BEST RESULTS */
+/* Best results (osebni rekord) */
 #bestResults {
   margin-top: 15px;
   font-size: 14px;
   color: #ccc;
 }
 
-/* MODAL - NAVODILA */
+/* Modal (navodila) */
 .modal {
   display: none; 
   position: fixed; 
@@ -127,9 +136,8 @@ canvas {
   left: 0; top: 0;
   width: 100%; height: 100%;
   overflow: auto; 
-  background-color: rgba(0,0,0,0.5); /* prosojno ozadje */
+  background-color: rgba(0,0,0,0.5);
 }
-
 .modal-content {
   background-color: #2b2b2b;
   margin: 10% auto; 
@@ -141,7 +149,6 @@ canvas {
   position: relative;
   border-radius: 8px;
 }
-
 .close {
   color: #fff;
   font-weight: bold;
@@ -153,4 +160,12 @@ canvas {
 }
 .close:hover {
   color: #1DB954;
+}
+
+/* DODATNA ANIMACIJA (npr. pulziranje barve žogice)
+   -> Lahko se uporabi z .ballPulse class (če želiš) */
+@keyframes pulseColor {
+  0%   { fill: #1DB954; }
+  50%  { fill: #09a14a; }
+  100% { fill: #1DB954; }
 }

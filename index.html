@@ -2,15 +2,19 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <title>The Bricks - Spotify Edition (Extended)</title>
+  <title>The Bricks - Spotify Edition (Extended + SweetAlert & Leaderboard)</title>
+  <!-- Povezava na CSS -->
   <link rel="stylesheet" href="style.css">
+
+  <!-- SweetAlert2 (zadnja različica) -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
   <!-- ============================
        ZAČETNI (WELCOME) ZASLON
   =============================-->
-  <div id="welcomeScreen" class="screen active">
+  <div id="welcomeScreen" class="screen active fade-in">
     <h1>The Bricks - Spotify Edition</h1>
     <div class="welcome-container">
       <div class="login-box">
@@ -55,7 +59,7 @@
   <!-- ============================
        IGRALNI ZASLON
   =============================-->
-  <div id="gameScreen" class="screen">
+  <div id="gameScreen" class="screen fade-in">
     <h1 id="gameTitle">The Bricks - Spotify Edition</h1>
 
     <div id="userInfo">
@@ -79,7 +83,7 @@
 
       <div id="bestResults">
         <p>
-          <strong>Najboljši rezultat (za to uporabniško ime):</strong><br>
+          <strong>Osebni rekord:</strong><br>
           Točke: <span id="bestScore">0</span> |
           Čas: <span id="bestTime">00:00</span>
         </p>
@@ -87,6 +91,7 @@
     </div>
   </div>
 
+  <!-- Naš glavni skript -->
   <script src="script.js"></script>
 </body>
 </html>
