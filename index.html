@@ -2,92 +2,34 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <title>The Bricks - Spotify Edition (SweetAlert + Leaderboard)</title>
-  
-  <!-- Naša CSS datoteka -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- SweetAlert2 (zadnja verzija) -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify Bricks</title>
+  <!-- Uporabimo Roboto in Open Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 </head>
 <body>
-  <!-- ZAČETNI ZASLON -->
-  <div id="welcomeScreen" class="screen active fade-in">
-    <h1>The Bricks - Spotify Edition</h1>
-    <div class="welcome-container">
-      <div class="login-box">
-        <label for="username">Uporabniško ime:</label>
-        <input type="text" id="username" placeholder="Vnesi ime..." />
-      </div>
-
-      <div class="difficulty-box">
-        <label for="difficulty">Izberi težavnost:</label>
-        <select id="difficulty">
-          <option value="easy">Lahko</option>
-          <option value="medium">Srednje</option>
-          <option value="hard">Težko</option>
-        </select>
-      </div>
-
-      <div class="buttons-box">
-        <button id="showInstructionsBtn">NAVODILA</button>
-        <button id="startGameBtn">ZAČNI IGRO</button>
-      </div>
+  <div class="main-container">
+    <h1 class="header-text">Spotify Bricks</h1>
+    <div class="info">
+      Čas: <span id="timer">00:00</span> | 
+      Točke: <span id="score">0</span> | 
+      Nivo: <span id="level">1</span> | 
+      Najboljši rezultat: <span id="highScore">0</span>
+    </div>
+    <canvas id="canvas" width="480" height="320"></canvas>
+    <div class="controls">
+      <button id="startBtn" disabled>Začni igro</button>
+      <button id="pauseBtn">Pavza</button>
+      <button id="difficultyBtn">Spremeni Težavnost</button>
+      <button id="leaderboardBtn">Leaderboard</button>
     </div>
   </div>
-
-  <!-- NAVODILA - MODAL -->
-  <div id="instructionsModal" class="modal">
-    <div class="modal-content">
-      <span id="closeInstructions" class="close">&times;</span>
-      <h2>Navodila za igranje</h2>
-      <p>
-        - Cilj igre je uničiti vse opeke s kroglico.<br>
-        - Ploščico upravljaš s tipkama levo/desno ali z miško, da kroglico odbijaš.<br>
-        - Bonus opeke prinašajo več točk.<br>
-        - Vsak uničen nabor opek te pripelje na višji nivo, kjer se težavnost poveča.<br>
-        - Če kroglica pade mimo ploščice, je igre konec.<br>
-        - Težavnost določa začetno hitrost žogice in število opek.<br>
-      </p>
-    </div>
-  </div>
-
-  <!-- IGRALNI ZASLON -->
-  <div id="gameScreen" class="screen fade-in">
-    <h1 id="gameTitle">The Bricks - Spotify Edition</h1>
-
-    <div id="userInfo">
-      Igralec: <span id="displayUser"></span> | 
-      Težavnost: <span id="displayDifficulty"></span>
-    </div>
-
-    <div id="gameContainer">
-      <canvas id="myCanvas" width="480" height="320"></canvas>
-
-      <div id="infoPanel">
-        <div class="infoBox">Točke: <span id="score">0</span></div>
-        <div class="infoBox">Čas: <span id="time">00:00</span></div>
-        <div class="infoBox">Nivo: <span id="level">1</span></div>
-      </div>
-
-      <div id="buttonsPanel">
-        <button id="pauseBtn">PAVZA</button>
-        <button id="resetBtn">KONEC/RESET</button>
-        <!-- Gumb za ročni prikaz Leaderboard-a -->
-        <button id="leaderboardBtn">LEADERBOARD</button>
-      </div>
-
-      <div id="bestResults">
-        <p>
-          <strong>Osebni rekord:</strong><br>
-          Točke: <span id="bestScore">0</span> |
-          Čas: <span id="bestTime">00:00</span>
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Glavni JavaScript -->
-  <script src="script.js"></script>
+  
+  <!-- jQuery in SweetAlert2 -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="game.js"></script>
 </body>
 </html>
