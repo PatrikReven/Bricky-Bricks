@@ -2,34 +2,85 @@
 <html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spotify Bricks</title>
-  <!-- Uporabimo Roboto in Open Sans -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <title>Spotify Breakout – Neon Deluxe Final</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- SweetAlert2 iz CDN (če želiš imeti “WOW” ob startu) -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-  <div class="main-container">
-    <h1 class="header-text">Spotify Bricks</h1>
-    <div class="info">
-      Čas: <span id="timer">00:00</span> | 
-      Točke: <span id="score">0</span> | 
-      Nivo: <span id="level">1</span> | 
-      Najboljši rezultat: <span id="highScore">0</span>
-    </div>
-    <canvas id="canvas" width="480" height="320"></canvas>
-    <div class="controls">
-      <button id="startBtn" disabled>Začni igro</button>
-      <button id="pauseBtn">Pavza</button>
-      <button id="difficultyBtn">Spremeni Težavnost</button>
-      <button id="leaderboardBtn">Leaderboard</button>
-    </div>
+
+<h1>Spotify Breakout – Neon Deluxe</h1>
+
+<div id="scoreboard" class="pulse-animation">
+  <p>Nivo: <mark id="level">1</mark></p>
+  <p>Točke: <mark id="tocke">0</mark></p>
+  <p>Čas: <mark id="cas">00:00</mark></p>
+</div>
+
+<button id="pauseBtn" disabled>Pause</button>
+<button id="endBtn" disabled>End</button>
+
+<canvas id="canvas" width="640" height="480"></canvas>
+
+<!-- Start Modal A (ime, težavnost, barva) -->
+<div id="startModalA" class="modal">
+  <div class="modal-content">
+    <h2>Spotify Breakout – Korak 1/2</h2>
+
+    <label for="playerName">Vnesi ime:</label>
+    <input type="text" id="playerName" placeholder="Tvoje ime" />
+
+    <label for="difficultySelect">Težavnost:</label>
+    <select id="difficultySelect">
+      <option value="easy">Easy</option>
+      <option value="normal" selected>Normal</option>
+      <option value="hard">Hard</option>
+    </select>
+
+    <label for="ballColorSelect">Barva žogice:</label>
+    <select id="ballColorSelect">
+      <option value="#ffffff" selected>Bela</option>
+      <option value="#ff0000">Rdeča</option>
+      <option value="#00ff00">Zelena</option>
+      <option value="#0000ff">Modra</option>
+      <option value="#ff00ff">Roza</option>
+    </select>
+
+    <button id="toInstructionsBtn">Naprej</button>
   </div>
-  
-  <!-- jQuery in SweetAlert2 -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="game.js"></script>
+</div>
+
+<!-- Start Modal B (navodila) -->
+<div id="startModalB" class="modal">
+  <div class="modal-content">
+    <h2>Spotify Breakout – Korak 2/2</h2>
+    <p class="instructions">
+      Navodila:<br><br>
+      - S puščicama <strong>←</strong> in <strong>→</strong> premikaš ploščico.<br>
+      - Razbij vse opeke (zlata opeka = bonus +3).<br>
+      - Po vsakem nivoju se igra pospeši.<br>
+      - <strong>Pause</strong> za pavzo ali <strong>End</strong> za konec.<br><br>
+      Ko si pripravljen, klikni “Začni igro”!
+    </p>
+    <button id="startGameBtn">Začni igro</button>
+  </div>
+</div>
+
+<!-- End Modal (rezultat, leaderboard) -->
+<div id="endModal" class="modal">
+  <div class="modal-content">
+    <h2>Konec igre</h2>
+    <p id="finalScoreMsg"></p>
+
+    <h3>Leaderboard</h3>
+    <ol id="leaderboardList"></ol>
+
+    <button id="restartBtn">Začni znova</button>
+    <button id="finishBtn">Končaj</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
 </body>
 </html>

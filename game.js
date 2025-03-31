@@ -1,380 +1,404 @@
-// Globalne spremenljivke
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
+/************************************************************
+  Spotify Breakout – Final Neon
+  -----------------------------------------------------------
+  - Modal A → (Ime, Težavnost, Barva) → Naprej
+  - Modal B → (Navodila) → Začni igro
+  - End Modal ob koncu:
+    “Začni znova” → vrnemo se na Start Modal A
+    “Končaj” → skrijemo End Modal, igra ostane končana
+  - Leaderboard: en zapis na ime, bonus opeke, več nivojev, pavza …
+************************************************************/
 
-var ballRadius = 10;
-var x, y, dx, dy;
-var ballSpeed = 2; // Hitrost, ki se prilagaja glede na težavnost
+var canvas, ctx;
+var WIDTH, HEIGHT;
 
-var paddleWidth = 75;
-var paddleHeight = 10;
-var paddleX;
-var paddleSpeed = 5;
+// Žogica
+var x, y;
+var dx, dy;
+var r = 10;
+var ballColor = "#ffffff";
 
-var rightPressed = false;
-var leftPressed = false;
+// Ploščica
+var paddlex;
+var paddlew = 80;
+var paddleh = 10;
+
+// Tipke
+var rightDown = false;
+var leftDown  = false;
 
 // Opeke
-var brickRowCount = 3;
-var brickColumnCount = 5;
-var brickWidth = 75;
-var brickHeight = 20;
-var brickPadding = 10;
-var brickOffsetTop = 30;
-var brickOffsetLeft = 30;
-var bricks = [];
+var bricks;
+var NROWS;
+var NCOLS;
+var BRICKWIDTH;
+var BRICKHEIGHT = 20;
+var PADDING = 2;
+var BONUS_CHANCE = 0.2;
 
-// Točke, timer in nivo
-var score = 0;
-var seconds = 0;
-var level = 1;
-var timerInterval, gameInterval;
-var isPlaying = false;
+// Barve
+var rowcolors   = ["#1DB954","#1DB954","#1DB954","#1DB954","#1DB954"];
+var paddlecolor = "#1DB954";
 
-var highScore = localStorage.getItem("highScore") || 0;
-$("#highScore").html(highScore);
+// Stanje
+var isPlaying    = false;
+var sekunde      = 0;
+var tocke        = 0;
+var currentLevel = 1;
+var drawInterval = null;
+var timerInterval= null;
 
-// Globalno igralčevo ime
-var playerName = "";
+// Težavnost + ime
+var difficulty   = "normal";
+var playerName   = "Neznani";
 
-// Leaderboard funkcije
-function updateLeaderboard(name, score) {
-  var leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
-  leaderboard.push({ name: name, score: score });
-  leaderboard.sort(function(a, b) {
-    return b.score - a.score;
-  });
-  leaderboard = leaderboard.slice(0, 10);
-  localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
-}
+// Leaderboard
+var leaderboard  = [];
+var LEADERBOARD_SIZE = 5;
 
-function showLeaderboard() {
-  var leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
-  if (leaderboard.length === 0) {
-    Swal.fire({
-      title: 'Leaderboard',
-      text: 'Ni še rezultatov.',
-      icon: 'info'
-    });
-    return;
+// Dom naložen
+window.addEventListener("load", function(){
+  // Preveri, če imamo kaj v localStorage
+  var data = localStorage.getItem("spotifyLeaderboard");
+  if(data){
+    leaderboard = JSON.parse(data);
   }
-  var content = "<ul style='list-style: none; padding: 0; text-align: left;'>";
-  leaderboard.forEach(function(entry, index) {
-    content += `<li>${index + 1}. ${entry.name} - ${entry.score}</li>`;
+
+  // Gumbi
+  var toInstructionsBtn = document.getElementById("toInstructionsBtn");
+  var startGameBtn      = document.getElementById("startGameBtn");
+  var pauseBtn          = document.getElementById("pauseBtn");
+  var endBtn            = document.getElementById("endBtn");
+  var restartBtn        = document.getElementById("restartBtn");
+  var finishBtn         = document.getElementById("finishBtn");
+
+  // Modal A -> Naprej => prikaže Modal B
+  toInstructionsBtn.addEventListener("click", function(){
+    var nameVal = document.getElementById("playerName").value.trim();
+    playerName = nameVal || "Neznani";
+
+    difficulty = document.getElementById("difficultySelect").value;
+    ballColor  = document.getElementById("ballColorSelect").value;
+
+    // Zapremo A, odpremo B
+    document.getElementById("startModalA").style.display="none";
+    document.getElementById("startModalB").style.display="flex";
   });
-  content += "</ul>";
-  Swal.fire({
-    title: 'Leaderboard',
-    html: content,
-    icon: 'info'
+
+  // Modal B -> Začni igro
+  startGameBtn.addEventListener("click", function(){
+    // Zapri B
+    document.getElementById("startModalB").style.display="none";
+    // Začni
+    startGame();
   });
+
+  // Pause / End
+  pauseBtn.addEventListener("click", togglePause);
+  endBtn.addEventListener("click", endGame);
+
+  // End Modal – “Začni znova”
+  restartBtn.addEventListener("click", function(){
+    document.getElementById("endModal").style.display="none";
+    // Vrni se nazaj na startModalA (da vpišeš ime, spet izbereš težavnost …)
+    document.getElementById("startModalA").style.display="flex";
+  });
+
+  // End Modal – “Končaj”
+  finishBtn.addEventListener("click", function(){
+    document.getElementById("endModal").style.display="none";
+    // Ostaneš v končani igri
+  });
+
+  // Tipke
+  document.addEventListener("keydown", onKeyDown);
+  document.addEventListener("keyup", onKeyUp);
+
+  // Za začetek prikaži Modal A
+  document.getElementById("startModalA").style.display="flex";
+});
+
+// Začni igro
+function startGame(){
+  if(isPlaying) return;
+
+  isPlaying = true;
+  document.getElementById("pauseBtn").disabled=false;
+  document.getElementById("endBtn").disabled=false;
+
+  initGame();
 }
 
-// Inicializacija opeke
-function initBricks() {
+// init
+function initGame(){
+  canvas = document.getElementById("canvas");
+  ctx    = canvas.getContext("2d");
+  WIDTH  = canvas.width;
+  HEIGHT = canvas.height;
+
+  currentLevel = 1;
+  tocke = 0;
+  sekunde = 0;
+
+  updateScoreboard();
+  setDifficultyParams();
+  initLevel();
+
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 1000);
+
+  if(drawInterval) clearInterval(drawInterval);
+  drawInterval = setInterval(draw, 10);
+}
+
+function initLevel(){
+  switch(difficulty){
+    case "easy":
+      NROWS=4; NCOLS=6; 
+      break;
+    case "hard":
+      NROWS=6; NCOLS=10;
+      break;
+    case "normal":
+    default:
+      NROWS=5; NCOLS=8;
+      break;
+  }
+
+  BRICKWIDTH = (WIDTH / NCOLS) - PADDING;
+
   bricks = [];
-  for (var c = 0; c < brickColumnCount; c++) {
-    bricks[c] = [];
-    for (var r = 0; r < brickRowCount; r++) {
-      var isBonus = Math.random() < 0.2;
-      bricks[c][r] = { x: 0, y: 0, status: 1, bonus: isBonus };
+  for(var i=0; i<NROWS; i++){
+    bricks[i]=[];
+    for(var j=0; j<NCOLS; j++){
+      bricks[i][j] = (Math.random() < BONUS_CHANCE)?2:1;
     }
+  }
+
+  paddlex=(WIDTH - paddlew)/2;
+  x=paddlex + paddlew/2;
+  y=HEIGHT - paddleh - r - 2;
+  dy=-Math.abs(dy);
+}
+
+function setDifficultyParams(){
+  switch(difficulty){
+    case "easy":
+      dx=2; dy=3; paddlew=100;
+      break;
+    case "hard":
+      dx=4; dy=6; paddlew=70;
+      break;
+    case "normal":
+    default:
+      dx=3; dy=5; paddlew=80;
+      break;
   }
 }
 
-// Inicializacija žogice in ploščice
-function initBall() {
-  x = canvas.width / 2;
-  y = canvas.height - 30;
-  dx = ballSpeed;
-  dy = -ballSpeed;
-  paddleX = (canvas.width - paddleWidth) / 2;
+// Pavza
+function togglePause(){
+  if(!isPlaying) return;
+  var pauseBtn=document.getElementById("pauseBtn");
+
+  if(drawInterval){
+    clearInterval(drawInterval);
+    drawInterval=null;
+    clearInterval(timerInterval);
+    timerInterval=null;
+    pauseBtn.textContent="Resume";
+  } else {
+    drawInterval=setInterval(draw, 10);
+    timerInterval=setInterval(updateTimer, 1000);
+    pauseBtn.textContent="Pause";
+  }
 }
 
-// Risanje žogice
-function drawBall() {
-  ctx.beginPath();
-  ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-  ctx.closePath();
+// End
+function endGame(){
+  if(!isPlaying) return;
+  isPlaying=false;
+
+  if(drawInterval) clearInterval(drawInterval);
+  drawInterval=null;
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval=null;
+
+  document.getElementById("pauseBtn").disabled=true;
+  document.getElementById("pauseBtn").textContent="Pause";
+  document.getElementById("endBtn").disabled=true;
+
+  addOrUpdateLeaderboard();
+  showEndModal();
 }
 
-// Risanje ploščice
-function drawPaddle() {
-  ctx.beginPath();
-  ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-  ctx.closePath();
+// Timer
+function updateTimer(){
+  if(!isPlaying) return;
+  sekunde++;
+  updateScoreboard();
 }
 
-// Risanje opeke
-function drawBricks() {
-  for (var c = 0; c < brickColumnCount; c++) {
-    for (var r = 0; r < brickRowCount; r++) {
-      var b = bricks[c][r];
-      if (b.status === 1) {
-        var brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
-        var brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
-        b.x = brickX;
-        b.y = brickY;
-        ctx.beginPath();
-        ctx.fillStyle = b.bonus ? "#FFD700" : "#0095DD";
-        ctx.rect(brickX, brickY, brickWidth, brickHeight);
-        ctx.fill();
-        ctx.closePath();
+function onKeyDown(e){
+  if(e.keyCode===39) rightDown=true;
+  else if(e.keyCode===37) leftDown=true;
+}
+function onKeyUp(e){
+  if(e.keyCode===39) rightDown=false;
+  else if(e.keyCode===37) leftDown=false;
+}
+
+// Risanje
+function draw(){
+  clearCanvas();
+
+  drawBall(x, y, r);
+
+  // Ploščica
+  if(rightDown && paddlex+paddlew<WIDTH) paddlex+=5;
+  else if(leftDown && paddlex>0) paddlex-=5;
+  ctx.fillStyle=paddlecolor;
+  rect(paddlex, HEIGHT-paddleh, paddlew, paddleh);
+
+  // Opeke
+  for(var i=0; i<NROWS; i++){
+    for(var j=0; j<NCOLS; j++){
+      var val=bricks[i][j];
+      if(val!==0){
+        ctx.fillStyle=(val===2)?"#f1c40f":rowcolors[i%rowcolors.length];
+        rect(
+          j*(BRICKWIDTH+PADDING)+PADDING,
+          i*(BRICKHEIGHT+PADDING)+PADDING,
+          BRICKWIDTH,
+          BRICKHEIGHT
+        );
       }
     }
   }
-}
 
-// Posodobitev točk in timerja
-function drawScore() {
-  $("#score").html(score);
-}
-function updateTimer() {
-  seconds++;
-  var sec = seconds % 60;
-  var min = Math.floor(seconds / 60);
-  $("#timer").html((min < 10 ? "0" + min : min) + ":" + (sec < 10 ? "0" + sec : sec));
-}
-
-// Glavna zanka igre
-function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBall();
-  drawPaddle();
-  drawBricks();
-  movePaddle();
-  collisionDetection();
-  
-  if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-    dx = -dx;
-  }
-  if (y + dy < ballRadius) {
-    dy = -dy;
-  } else if (y + dy > canvas.height - ballRadius) {
-    if (x > paddleX && x < paddleX + paddleWidth) {
-      dy = -dy;
-      score++;
-      drawScore();
+  // Odboji
+  if(x+dx>WIDTH-r || x+dx<r) dx=-dx;
+  if(y+dy<r){
+    dy=-dy;
+  } else if(y+dy>HEIGHT-r){
+    // Ploščica?
+    if(x>paddlex && x<paddlex+paddlew){
+      dx=8*((x-(paddlex+paddlew/2))/paddlew);
+      dy=-Math.abs(dy);
     } else {
-      updateLeaderboard(playerName, score);
-      showLeaderboard();
-      if (score > highScore) {
-        highScore = score;
-        localStorage.setItem("highScore", highScore);
-        $("#highScore").html(highScore);
-      }
       endGame();
       return;
     }
   }
-  
-  x += dx;
-  y += dy;
+
+  checkBrickCollision();
+
+  x+=dx; 
+  y+=dy;
 }
 
-// Premikanje ploščice
-function movePaddle() {
-  if (rightPressed && paddleX < canvas.width - paddleWidth) {
-    paddleX += paddleSpeed;
-  }
-  if (leftPressed && paddleX > 0) {
-    paddleX -= paddleSpeed;
+function checkBrickCollision(){
+  var rowheight=BRICKHEIGHT+PADDING;
+  var colwidth =BRICKWIDTH+PADDING;
+  var row=Math.floor(y/rowheight);
+  var col=Math.floor(x/colwidth);
+
+  if(
+    row>=0 && row<NROWS &&
+    col>=0 && col<NCOLS &&
+    bricks[row][col]!==0
+  ){
+    var val=bricks[row][col];
+    tocke += (val===2)?3:1;
+    bricks[row][col]=0;
+    dy=-dy;
+    updateScoreboard();
+    checkLevelComplete();
   }
 }
 
-// Zaznavanje trkov med žogico in opeko
-function collisionDetection() {
-  for (var c = 0; c < brickColumnCount; c++) {
-    for (var r = 0; r < brickRowCount; r++) {
-      var b = bricks[c][r];
-      if (b.status === 1) {
-        if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
-          dy = -dy;
-          b.status = 0;
-          score += b.bonus ? 5 : 1;
-          drawScore();
-          if (allBricksCleared()) {
-            levelUp();
-            return;
-          }
-        }
-      }
+function checkLevelComplete(){
+  for(var i=0; i<NROWS; i++){
+    for(var j=0; j<NCOLS; j++){
+      if(bricks[i][j]!==0) return;
     }
   }
-}
-function allBricksCleared() {
-  for (var c = 0; c < brickColumnCount; c++) {
-    for (var r = 0; r < brickRowCount; r++) {
-      if (bricks[c][r].status === 1) {
-        return false;
-      }
-    }
-  }
-  return true;
+  currentLevel++;
+  dx*=1.2; 
+  dy*=1.2;
+  updateScoreboard();
+  initLevel();
 }
 
-// Nadgradnja nivoja
-function levelUp() {
-  clearInterval(gameInterval);
-  clearInterval(timerInterval);
-  Swal.fire({
-    title: 'Nivo ' + level + ' zaključen!',
-    text: 'Napredujemo na naslednji nivo.',
-    icon: 'success',
-    confirmButtonText: 'Naprej'
-  }).then(() => {
-    level++;
-    $("#level").html(level);
-    ballSpeed += 1;
-    initBricks();
-    initBall();
-    timerInterval = setInterval(updateTimer, 1000);
-    gameInterval = setInterval(gameLoop, 10);
-  });
+function updateScoreboard(){
+  document.getElementById("level").textContent=currentLevel;
+  document.getElementById("tocke").textContent=tocke;
+
+  var s=sekunde%60;
+  var m=Math.floor(sekunde/60);
+  var ss=(s<10)?"0"+s:s;
+  var mm=(m<10)?"0"+m:m;
+  document.getElementById("cas").textContent = mm+":"+ss;
 }
 
-// Konec igre
-function endGame() {
-  clearInterval(timerInterval);
-  clearInterval(gameInterval);
-  Swal.fire({
-    title: 'Game Over',
-    text: `Tvoje točke: ${score}`,
-    icon: 'error',
-    confirmButtonText: 'Igraj znova'
-  }).then(() => {
-    isPlaying = false;
-    $("#startBtn").prop("disabled", false);
-  });
+function clearCanvas(){
+  ctx.clearRect(0,0,WIDTH,HEIGHT);
+}
+function drawBall(cx,cy,rr){
+  ctx.fillStyle=ballColor;
+  ctx.beginPath();
+  ctx.arc(cx,cy,rr,0,Math.PI*2,true);
+  ctx.closePath();
+  ctx.fill();
+}
+function rect(xx,yy,ww,hh){
+  ctx.beginPath();
+  ctx.rect(xx,yy,ww,hh);
+  ctx.closePath();
+  ctx.fill();
 }
 
-// Začetek igre
-function startGame() {
-  if (!isPlaying) {
-    isPlaying = true;
-    $("#startBtn").prop("disabled", true);
-    initBricks();
-    initBall();
-    score = 0;
-    seconds = 0;
-    level = 1;
-    $("#score").html(score);
-    $("#timer").html("00:00");
-    $("#level").html(level);
-    timerInterval = setInterval(updateTimer, 1000);
-    gameInterval = setInterval(gameLoop, 10);
-  }
-}
-function initGame() {
-  score = 0;
-  seconds = 0;
-  level = 1;
-  $("#score").html(score);
-  $("#timer").html("00:00");
-  $("#level").html(level);
-}
-
-// Dogodki tipkovnice (puščice in A/D)
-document.addEventListener("keydown", function(event) {
-  if (event.key === "Right" || event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
-    rightPressed = true;
-  }
-  if (event.key === "Left" || event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
-    leftPressed = true;
-  }
-});
-document.addEventListener("keyup", function(event) {
-  if (event.key === "Right" || event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
-    rightPressed = false;
-  }
-  if (event.key === "Left" || event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
-    leftPressed = false;
-  }
-});
-
-// Gumbi
-$("#startBtn").click(function() {
-  startGame();
-});
-$("#pauseBtn").click(function() {
-  if (isPlaying) {
-    clearInterval(timerInterval);
-    clearInterval(gameInterval);
-    isPlaying = false;
-    $(this).text("Nadaljuj");
+// Leaderboard (1 zapis na ime)
+function addOrUpdateLeaderboard(){
+  var idx=leaderboard.findIndex(e=> e.name===playerName);
+  if(idx===-1){
+    leaderboard.push({ name: playerName, score:tocke });
   } else {
-    isPlaying = true;
-    timerInterval = setInterval(updateTimer, 1000);
-    gameInterval = setInterval(gameLoop, 10);
-    $(this).text("Pavza");
+    if(tocke>leaderboard[idx].score){
+      leaderboard[idx].score=tocke;
+    }
   }
-});
-$("#difficultyBtn").click(function() {
-  chooseDifficulty();
-});
-$("#leaderboardBtn").click(function() {
-  showLeaderboard();
-});
+  leaderboard.sort((a,b)=> b.score-a.score);
+  if(leaderboard.length>LEADERBOARD_SIZE){
+    leaderboard=leaderboard.slice(0,LEADERBOARD_SIZE);
+  }
+  localStorage.setItem("spotifyLeaderboard", JSON.stringify(leaderboard));
+}
 
-// Najprej pridobi ime igralca, nato nastavi težavnost
-$(document).ready(function() {
-  $("#startBtn").prop("disabled", true);
-  Swal.fire({
-    title: 'Vnesi svoje ime',
-    input: 'text',
-    inputPlaceholder: 'Tvoje ime',
-    confirmButtonText: 'Nadaljuj',
-    allowOutsideClick: false,
-    inputValidator: (value) => {
-      if (!value) {
-        return 'Prosim, vnesi svoje ime!';
-      }
-    }
-  }).then((result) => {
-    playerName = result.value;
-    chooseDifficulty();
-  });
-});
+// Pokaži end modal
+function showEndModal(){
+  var msg="Bravo, "+playerName+"! Dosegel si "+tocke+" točk (nivo "+currentLevel+")";
+  document.getElementById("finalScoreMsg").textContent=msg;
 
-// Funkcija za nastavitev težavnosti
-function chooseDifficulty() {
-  Swal.fire({
-    title: 'Izberi težavnost',
-    input: 'select',
-    inputOptions: {
-      easy: 'Enostavno',
-      medium: 'Srednje',
-      hard: 'Težko'
-    },
-    inputPlaceholder: 'Izberi težavnost',
-    showCancelButton: false,
-    confirmButtonText: 'Izberi'
-  }).then((result) => {
-    if (result.value) {
-      var diff = result.value;
-      if (diff === 'easy') {
-        ballSpeed = 1.5;
-        paddleSpeed = 5;
-      } else if (diff === 'medium') {
-        ballSpeed = 2.5;
-        paddleSpeed = 5;
-      } else if (diff === 'hard') {
-        ballSpeed = 3.5;
-        paddleSpeed = 5;
-      }
-      Swal.fire({
-        title: 'Težavnost nastavljena!',
-        text: 'Izbrana: ' + (diff === 'easy' ? 'Enostavno' : diff === 'medium' ? 'Srednje' : 'Težko'),
-        icon: 'info',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => {
-        $("#startBtn").prop("disabled", false);
-      });
+  renderLeaderboard();
+  document.getElementById("endModal").style.display="flex";
+}
+
+function renderLeaderboard(){
+  var lb=document.getElementById("leaderboardList");
+  lb.innerHTML="";
+
+  leaderboard.forEach(function(e,index){
+    var li=document.createElement("li");
+    if(index===0){
+      li.innerHTML=`<span class="medal1">🥇</span> ${e.name} – ${e.score}`;
+    } else if(index===1){
+      li.innerHTML=`<span class="medal2">🥈</span> ${e.name} – ${e.score}`;
+    } else if(index===2){
+      li.innerHTML=`<span class="medal3">🥉</span> ${e.name} – ${e.score}`;
+    } else {
+      li.textContent=`${index+1}. ${e.name} – ${e.score}`;
     }
+    lb.appendChild(li);
   });
 }
