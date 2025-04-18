@@ -1,86 +1,108 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="sl">
 <head>
   <meta charset="UTF-8">
-  <title>Spotify Breakout – Neon Deluxe Final</title>
-  <link rel="stylesheet" href="style.css" />
-
-  <!-- SweetAlert2 iz CDN (če želiš imeti “WOW” ob startu) -->
+  <title>Spotify Breakout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
-<h1>Spotify Breakout – Neon Deluxe</h1>
+  <!-- Neon watermark & controls -->
+  <div class="watermark"></div>
+  <button id="musicBtn" title="Mute/unmute background music">🔊</button>
+  <button id="powerupBtn" title="Power‑up informacije">🔋</button>
+  <!-- Ozadna glasba: zamenjaj 'music.mp3' z željeno potjo -->
+  <audio id="bgMusic" src="music.mp3" loop autoplay></audio>
 
-<div id="scoreboard" class="pulse-animation">
-  <p>Nivo: <mark id="level">1</mark></p>
-  <p>Točke: <mark id="tocke">0</mark></p>
-  <p>Čas: <mark id="cas">00:00</mark></p>
-</div>
+  <h1>Spotify Breakout</h1>
 
-<button id="pauseBtn" disabled>Pause</button>
-<button id="endBtn" disabled>End</button>
-
-<canvas id="canvas" width="640" height="480"></canvas>
-
-<!-- Start Modal A (ime, težavnost, barva) -->
-<div id="startModalA" class="modal">
-  <div class="modal-content">
-    <h2>Spotify Breakout – Korak 1/2</h2>
-
-    <label for="playerName">Vnesi ime:</label>
-    <input type="text" id="playerName" placeholder="Tvoje ime" />
-
-    <label for="difficultySelect">Težavnost:</label>
-    <select id="difficultySelect">
-      <option value="easy">Easy</option>
-      <option value="normal" selected>Normal</option>
-      <option value="hard">Hard</option>
-    </select>
-
-    <label for="ballColorSelect">Barva žogice:</label>
-    <select id="ballColorSelect">
-      <option value="#ffffff" selected>Bela</option>
-      <option value="#ff0000">Rdeča</option>
-      <option value="#00ff00">Zelena</option>
-      <option value="#0000ff">Modra</option>
-      <option value="#ff00ff">Roza</option>
-    </select>
-
-    <button id="toInstructionsBtn">Naprej</button>
+  <div id="scoreboard" class="pulse-animation">
+    <p>Nivo: <mark id="level">1</mark></p>
+    <p>Točke: <mark id="tocke">0</mark></p>
+    <p>Čas: <mark id="cas">00:00</mark></p>
   </div>
-</div>
 
-<!-- Start Modal B (navodila) -->
-<div id="startModalB" class="modal">
-  <div class="modal-content">
-    <h2>Spotify Breakout – Korak 2/2</h2>
-    <p class="instructions">
-      Navodila:<br><br>
-      - S puščicama <strong>←</strong> in <strong>→</strong> premikaš ploščico.<br>
-      - Razbij vse opeke (zlata opeka = bonus +3).<br>
-      - Po vsakem nivoju se igra pospeši.<br>
-      - <strong>Pause</strong> za pavzo ali <strong>End</strong> za konec.<br><br>
-      Ko si pripravljen, klikni “Začni igro”!
-    </p>
-    <button id="startGameBtn">Začni igro</button>
+  <button id="pauseBtn" disabled>Pause</button>
+  <button id="endBtn" disabled>End</button>
+
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <!-- Start Modal A -->
+  <div id="startModalA" class="modal">
+    <div class="modal-content">
+      <h2>Spotify Breakout – Korak 1/2</h2>
+      <label for="playerName">Vnesi ime:</label>
+      <input type="text" id="playerName" placeholder="Tvoje ime">
+      <label for="difficultySelect">Težavnost:</label>
+      <select id="difficultySelect">
+        <option value="easy">Lahko</option>
+        <option value="normal" selected>Normalno</option>
+        <option value="hard">Težko</option>
+      </select>
+      <label for="ballColorSelect">Barva žogice:</label>
+      <select id="ballColorSelect">
+        <option value="#ffffff" selected>Bela</option>
+        <option value="#ff0000">Rdeča</option>
+        <option value="#00ff00">Zelena</option>
+        <option value="#0000ff">Modra</option>
+        <option value="#ff00ff">Roza</option>
+      </select>
+      <button id="toInstructionsBtn">Naprej</button>
+    </div>
   </div>
-</div>
 
-<!-- End Modal (rezultat, leaderboard) -->
-<div id="endModal" class="modal">
-  <div class="modal-content">
-    <h2>Konec igre</h2>
-    <p id="finalScoreMsg"></p>
-
-    <h3>Leaderboard</h3>
-    <ol id="leaderboardList"></ol>
-
-    <button id="restartBtn">Začni znova</button>
-    <button id="finishBtn">Končaj</button>
+  <!-- Start Modal B -->
+  <div id="startModalB" class="modal">
+    <div class="modal-content">
+      <h2>Spotify Breakout – Korak 2/2</h2>
+      <p class="instructions">
+        Navodila:<br><br>
+        - ← / → premikaš ploščico.<br>
+        - Razbij opeke (zlata = bonus +3 + power‑up).<br>
+        - Po nivoju igra pospeši.<br>
+        - Pause za pavzo, End za konec.<br><br>
+        Klikni 🔋 zgoraj za podrobnejša pojasnila power‑upov.
+      </p>
+      <button id="startGameBtn">Začni igro</button>
+    </div>
   </div>
-</div>
 
-<script src="game.js"></script>
+  <!-- Power-up Info Modal -->
+  <div id="powerupModal" class="modal">
+    <div class="modal-content">
+      <h2>Power‑up Pojasnila</h2>
+      <ul class="powerup-list">
+        <li><span>🐌 slow‑mo</span>: upočasni žogico za 8 s</li>
+        <li><span>🛡️ shield</span>: enkrat odbije žogico</li>
+        <li><span>🧲 magnet</span>: privlači power‑up ikone</li>
+        <li><span>⚡ laser</span>: strelja strelo po isti koloni</li>
+        <li><span>✨ trail</span>: prikazuje čudovito sled žogice</li>
+        <li><span>🚀 boost</span>: pospeši žogico za 7 s</li>
+        <li><span>↔️ crossfade</span>: poveča širino ploščice za 5 s</li>
+        <li><span>🔀 shuffle</span>: naključno spremeni smer žogic</li>
+        <li><span>🎵 multiball</span>: doda še eno žogico</li>
+        <li><span>🎚️ equalizer</span>: upočasni žogico za 5 s</li>
+        <li><span>📜 playlist</span>: podvoji točke za navadne opeke (1→2) za 10 s</li>
+      </ul>
+      <button id="closePowerupBtn">Zapri</button>
+    </div>
+  </div>
+
+  <!-- End Modal -->
+  <div id="endModal" class="modal">
+    <div class="modal-content">
+      <h2>Konec igre</h2>
+      <p id="finalScoreMsg"></p>
+      <h3>Leaderboard</h3>
+      <ol id="leaderboardList"></ol>
+      <button id="restartBtn">Začni znova</button>
+      <button id="finishBtn">Končaj</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
 </body>
 </html>
