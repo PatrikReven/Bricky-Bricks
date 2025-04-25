@@ -10,11 +10,8 @@
 </head>
 <body>
 
-  <!-- Neon watermark & controls -->
   <div class="watermark"></div>
   <button id="musicBtn" title="Mute/unmute background music">🔊</button>
-  <button id="powerupBtn" title="Power‑up informacije">🔋</button>
-  <!-- Ozadna glasba: zamenjaj 'music.mp3' z željeno potjo -->
   <audio id="bgMusic" src="music.mp3" loop autoplay></audio>
 
   <h1>Spotify Breakout</h1>
@@ -29,6 +26,24 @@
   <button id="endBtn" disabled>End</button>
 
   <canvas id="canvas" width="640" height="480"></canvas>
+
+  <!-- Power-up Sidebar -->
+  <div id="powerupSidebar">
+    <h3>Power-upi</h3>
+    <ul>
+      <li>🐌 <b>slow-mo</b>: upočasni žogico za 8 s</li>
+      <li>🛡️ <b>shield</b>: enkrat odbije žogico</li>
+      <li>🧲 <b>magnet</b>: privlači power-up ikone</li>
+      <li>⚡ <b>laser</b>: strelja po koloni</li>
+      <li>✨ <b>trail</b>: čudovita sled žogice</li>
+      <li>🚀 <b>boost</b>: pospeši žogico za 7 s</li>
+      <li>↔️ <b>crossfade</b>: poveča ploščico za 5 s</li>
+      <li>🔀 <b>shuffle</b>: spremeni smer žogic</li>
+      <li>🎵 <b>multiball</b>: doda žogico</li>
+      <li>🎚️ <b>equalizer</b>: upočasni žogico za 5 s</li>
+      <li>📜 <b>playlist</b>: 2× točke za 10 s</li>
+    </ul>
+  </div>
 
   <!-- Start Modal A -->
   <div id="startModalA" class="modal">
@@ -61,33 +76,11 @@
       <p class="instructions">
         Navodila:<br><br>
         - ← / → premikaš ploščico.<br>
-        - Razbij opeke (zlata = bonus +3 + power‑up).<br>
+        - Razbij opeke (zlata = bonus +3 + power-up).<br>
         - Po nivoju igra pospeši.<br>
-        - Pause za pavzo, End za konec.<br><br>
-        Klikni 🔋 zgoraj za podrobnejša pojasnila power‑upov.
+        - Pause za pavzo, End za konec.
       </p>
       <button id="startGameBtn">Začni igro</button>
-    </div>
-  </div>
-
-  <!-- Power-up Info Modal -->
-  <div id="powerupModal" class="modal">
-    <div class="modal-content">
-      <h2>Power‑up Pojasnila</h2>
-      <ul class="powerup-list">
-        <li><span>🐌 slow‑mo</span>: upočasni žogico za 8 s</li>
-        <li><span>🛡️ shield</span>: enkrat odbije žogico</li>
-        <li><span>🧲 magnet</span>: privlači power‑up ikone</li>
-        <li><span>⚡ laser</span>: strelja strelo po isti koloni</li>
-        <li><span>✨ trail</span>: prikazuje čudovito sled žogice</li>
-        <li><span>🚀 boost</span>: pospeši žogico za 7 s</li>
-        <li><span>↔️ crossfade</span>: poveča širino ploščice za 5 s</li>
-        <li><span>🔀 shuffle</span>: naključno spremeni smer žogic</li>
-        <li><span>🎵 multiball</span>: doda še eno žogico</li>
-        <li><span>🎚️ equalizer</span>: upočasni žogico za 5 s</li>
-        <li><span>📜 playlist</span>: podvoji točke za navadne opeke (1→2) za 10 s</li>
-      </ul>
-      <button id="closePowerupBtn">Zapri</button>
     </div>
   </div>
 
